@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-CN" class="dark">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nexus Partner AI OS</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -11,61 +13,425 @@
         theme: {
           extend: {
             colors: {
-              slate: {
-                850: '#151f32',
-                900: '#0f172a',
-                950: '#020617',
-              },
-              primary: {
-                400: '#22d3ee', // Cyan
-                500: '#06b6d4',
-                600: '#0891b2',
-              },
-              gold: {
-                400: '#fbbf24',
-                500: '#f59e0b',
-                600: '#d97706',
-              }
+              slate: { 850: '#151f32', 900: '#0f172a', 950: '#020617' },
+              primary: { 400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2' },
+              gold: { 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706' }
             },
-            fontFamily: {
-              sans: ['Inter', 'system-ui', 'sans-serif'],
-            },
+            fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+            animation: { 'fade-in': 'fadeIn 0.3s ease-out' },
+            keyframes: { fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } } }
           },
         },
       }
     </script>
+
+    <!-- Lucide Icons (Vanilla JS version) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Import Map for Google GenAI SDK -->
+    <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.sh/@google/genai@0.2.1"
+      }
+    }
+    </script>
+
     <style>
-      body {
-        background-color: #020617;
-        color: #f8fafc;
-        scroll-behavior: smooth;
-      }
-      .glass-card {
-        background: rgba(30, 41, 59, 0.4);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(148, 163, 184, 0.1);
-      }
-      .gradient-text {
-        background: linear-gradient(to right, #22d3ee, #f59e0b);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
+      body { background-color: #020617; color: #f8fafc; scroll-behavior: smooth; }
+      .glass-card { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(148, 163, 184, 0.1); }
+      .gradient-text { background: linear-gradient(to right, #22d3ee, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+      
+      /* Chat Scrollbar */
+      .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+      .scrollbar-thin::-webkit-scrollbar-track { background: #0f172a; }
+      .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 20px; }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
-    "@google/genai": "https://esm.sh/@google/genai@^1.33.0"
-  }
-}
-</script>
 </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+<body>
+
+    <!-- NAV -->
+    <nav class="fixed top-0 w-full z-50 glass-card border-b-0 border-b-slate-800/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg flex items-center justify-center text-slate-950 font-bold">N</div>
+                    <span class="text-xl font-bold tracking-tight text-slate-100">NEXUS <span class="text-primary-400 font-light">OS</span></span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#empowerment" class="hover:text-primary-400 transition-colors text-sm font-medium">赋能对象</a>
+                    <a href="#assets" class="hover:text-primary-400 transition-colors text-sm font-medium">稀缺货架</a>
+                    <a href="#ai" class="hover:text-primary-400 transition-colors text-sm font-medium">AI 大脑</a>
+                    <button class="bg-slate-100 text-slate-900 hover:bg-white px-5 py-2 rounded-full text-sm font-semibold transition-all transform hover:scale-105">申请演示</button>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="text-slate-300"><i data-lucide="menu"></i></button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden glass-card border-t border-slate-700 p-4 space-y-4 animate-fade-in">
+            <a href="#empowerment" class="block py-2 hover:text-primary-400 mobile-link">赋能对象</a>
+            <a href="#assets" class="block py-2 hover:text-primary-400 mobile-link">稀缺货架</a>
+            <a href="#ai" class="block py-2 hover:text-primary-400 mobile-link">AI 大脑</a>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-primary-600/20 rounded-full blur-[120px] -z-10"></div>
+        <div class="absolute bottom-0 right-0 w-[600px] h-[400px] bg-gold-500/10 rounded-full blur-[100px] -z-10"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/50 border border-slate-700/50 mb-8 backdrop-blur-sm">
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <span class="text-xs font-medium tracking-wider uppercase text-slate-400">Nexus OS v2.5 Live</span>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight">
+                <span class="text-slate-100">Alpha 级资产 × </span>
+                <span class="gradient-text">Generative AI</span><br />
+                <span class="text-slate-100 text-4xl md:text-6xl">重新定义财富管理生态</span>
+            </h1>
+            <p class="mt-4 text-xl text-slate-400 max-w-3xl mx-auto mb-10 font-light">
+                Nexus 合作伙伴 AI 操作系统 —— 专为 EAM、家族办公室及顶尖理财师打造的数字化赋能闭环。
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button class="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-400 hover:to-primary-500 text-white px-8 py-4 rounded-full text-lg font-bold transition-all shadow-lg shadow-primary-500/25 flex items-center justify-center gap-2 group">
+                    立即接入货架 <i data-lucide="arrow-right" class="group-hover:translate-x-1 transition-transform"></i>
+                </button>
+                <button class="glass-card text-slate-200 px-8 py-4 rounded-full text-lg font-semibold hover:bg-slate-800 transition-all border-slate-700">
+                    预约系统演示
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- EMPOWERMENT (Dynamic JS Rendered) -->
+    <section id="empowerment" class="py-20 bg-slate-950 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-slate-100 mb-4">精准赋能每一类财富管理者</h2>
+                <div class="w-20 h-1 bg-primary-500 mx-auto rounded-full"></div>
+            </div>
+            <div id="personas-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- JS Will Inject Content Here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ASSETS (Dynamic JS Rendered) -->
+    <section id="assets" class="py-24 bg-slate-900 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+                <div>
+                    <span class="text-gold-500 font-bold tracking-wider uppercase text-sm mb-2 block">Premium Shelf</span>
+                    <h2 class="text-4xl font-bold text-slate-50">全球稀缺资产货架</h2>
+                    <p class="text-slate-400 mt-2">剔除大众品类，聚焦机构级 (Institutional) 独家份额</p>
+                </div>
+                <button class="text-primary-400 flex items-center gap-2 hover:text-primary-300 transition-colors font-medium">
+                    查看完整清单 <i data-lucide="chevron-right" width="16"></i>
+                </button>
+            </div>
+            <div id="assets-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- JS Will Inject Content Here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- AI FEATURES & CHAT -->
+    <section id="ai" class="py-24 bg-slate-950 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <span class="text-primary-500 font-bold tracking-wider uppercase text-sm mb-2 block">Powered by Gemini 2.5</span>
+                <h2 class="text-4xl font-bold text-slate-50 mb-4">Nexus AI 投研大脑</h2>
+                <p class="text-slate-400 max-w-2xl mx-auto">不仅仅是聊天机器人，更是深植于业务流程的智能中枢。</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                <!-- Left: Tabs -->
+                <div class="lg:col-span-5 space-y-6" id="ai-tabs">
+                    
+                    <!-- Hunter Tab -->
+                    <button onclick="switchTab('hunter')" id="tab-hunter" class="w-full text-left p-6 rounded-xl border transition-all duration-300 flex items-start gap-4 bg-transparent border-slate-800 hover:bg-slate-900">
+                        <div class="p-3 rounded-lg bg-slate-800 text-slate-400 tab-icon">
+                            <i data-lucide="target"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-100 mb-1">智能获客 (Hunter)</h3>
+                            <p class="text-sm text-slate-400">基于高净值人群画像，自动生成拓客名单与破冰话术。</p>
+                        </div>
+                    </button>
+
+                    <!-- Guardian Tab -->
+                    <button onclick="switchTab('guardian')" id="tab-guardian" class="w-full text-left p-6 rounded-xl border transition-all duration-300 flex items-start gap-4 bg-transparent border-slate-800 hover:bg-slate-900">
+                        <div class="p-3 rounded-lg bg-slate-800 text-slate-400 tab-icon">
+                            <i data-lucide="shield-alert"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-100 mb-1">市场安抚 (Guardian)</h3>
+                            <p class="text-sm text-slate-400">市场剧烈波动时，自动生成个性化安抚信与分析报告。</p>
+                        </div>
+                    </button>
+
+                    <!-- Expert Tab -->
+                    <button onclick="switchTab('expert')" id="tab-expert" class="w-full text-left p-6 rounded-xl border transition-all duration-300 flex items-start gap-4 bg-transparent border-slate-800 hover:bg-slate-900">
+                        <div class="p-3 rounded-lg bg-slate-800 text-slate-400 tab-icon">
+                            <i data-lucide="brain-circuit"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-100 mb-1">业务专家 (Expert)</h3>
+                            <p class="text-sm text-slate-400">7x24 小时在线的投委会专家，解答复杂架构问题。</p>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Right: Content Display -->
+                <div class="lg:col-span-7 h-[500px]">
+                    
+                    <!-- Static Dashboard View (Hunter/Guardian) -->
+                    <div id="view-dashboard" class="h-full bg-slate-900/50 border border-slate-800 rounded-2xl p-8 flex items-center justify-center relative overflow-hidden hidden">
+                        <div class="text-center z-10">
+                            <div class="w-20 h-20 bg-slate-800 rounded-full mx-auto flex items-center justify-center mb-6">
+                                <i data-lucide="layout-dashboard" size="40" class="text-slate-500"></i>
+                            </div>
+                            <h3 id="dashboard-title" class="text-2xl font-bold text-slate-200 mb-2">Hunter Mode</h3>
+                            <p class="text-slate-500">(Contact Sales to see full dashboard demonstration)</p>
+                        </div>
+                        <div class="absolute top-10 right-10 w-32 h-2 bg-slate-800 rounded-full opacity-50"></div>
+                        <div class="absolute top-20 right-10 w-20 h-2 bg-slate-800 rounded-full opacity-50"></div>
+                        <div class="absolute bottom-10 left-10 w-48 h-2 bg-slate-800 rounded-full opacity-50"></div>
+                    </div>
+
+                    <!-- Chat Interface (Expert) -->
+                    <div id="view-chat" class="hidden flex flex-col h-full w-full glass-card rounded-2xl overflow-hidden shadow-2xl border-slate-700/50">
+                        <!-- Header -->
+                        <div class="bg-slate-900/80 p-4 border-b border-slate-700 flex items-center gap-3">
+                            <div class="p-2 bg-primary-500/20 rounded-lg">
+                                <i data-lucide="sparkles" class="w-5 h-5 text-primary-400"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-slate-100">Nexus AI Expert</h3>
+                                <p class="text-xs text-slate-400">Powered by Gemini 2.5 Flash</p>
+                            </div>
+                        </div>
+                        <!-- Messages -->
+                        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-950/50 scrollbar-thin">
+                            <!-- Welcome Message -->
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary-600">
+                                    <i data-lucide="bot" width="16" class="text-white"></i>
+                                </div>
+                                <div class="max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed bg-slate-800 text-slate-200 rounded-tl-none">
+                                    您好，我是 Nexus 业务专家智能体。我可以为您解析全球宏观趋势，或协助您筛选适合家办客户的 Alpha 策略。
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Input -->
+                        <div class="p-4 bg-slate-900/80 border-t border-slate-700">
+                            <div class="relative flex items-center">
+                                <input type="text" id="chat-input" placeholder="询问关于 PE 份额或 Nexus 系统功能..." class="w-full bg-slate-800 border border-slate-600 rounded-full py-3 px-5 text-slate-200 focus:outline-none focus:border-primary-500 pr-12 placeholder-slate-500">
+                                <button id="chat-send" class="absolute right-2 p-2 bg-primary-600 hover:bg-primary-500 text-white rounded-full transition-colors">
+                                    <i data-lucide="send" width="18"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-slate-950 py-12 border-t border-slate-800 text-center text-slate-600 text-sm">
+        © 2024 Nexus Financial Technology. All Rights Reserved.
+    </footer>
+
+    <!-- MAIN SCRIPT -->
+    <script type="module">
+        import { GoogleGenAI } from "@google/genai";
+
+        // ==========================================
+        // !!! CONFIGURATION !!!
+        // GitHub Pages cannot read process.env.
+        // Enter your API key here for the demo to work.
+        // ==========================================
+        const API_KEY = ""; 
+        // ==========================================
+
+        const ai = new GoogleGenAI({ apiKey: API_KEY });
+
+        // --- Data ---
+        const PERSONAS = [
+            { title: "持牌 EAM 机构", desc: "解决多托管行数据聚合难题，提供统一视图。", hl: "Omnibus 综合账户支持", icon: "building-2" },
+            { title: "单一/联合家办", desc: "打破传统渠道壁垒，直通全球顶级私募份额。", hl: "稀缺 PE/VC 独家配额", icon: "briefcase" },
+            { title: "独立理财师 (IFA)", desc: "从繁琐的中后台事务中解放，专注于客户关系。", hl: "自动化佣金结算系统", icon: "users" },
+            { title: "投顾咨询机构", desc: "合规与投研的双重保障，降低运营风险。", hl: "AI 智能合规风控大脑", icon: "shield-check" }
+        ];
+
+        const ASSETS = [
+            { title: "顶级私募股权 (PE/VC)", desc: "红杉 (Sequoia)、黑石 (Blackstone) 等旗舰基金份额。", partners: ["Sequoia", "Blackstone"] },
+            { title: "全球宏观对冲基金", desc: "千禧 (Millennium)、桥水 (Bridgewater) 等独家额度。", partners: ["Millennium", "Bridgewater"] },
+            { title: "定制化结构化票据", desc: "基于高盛、摩根大通底层的 FCN/Snowball 定制。", partners: ["GS", "JPM"] }
+        ];
+
+        // --- Render Functions ---
+        function renderContent() {
+            // Render Personas
+            const personaHTML = PERSONAS.map(p => `
+                <div class="glass-card p-8 rounded-2xl hover:border-primary-500/50 transition-all group hover:-translate-y-2">
+                    <div class="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center mb-6 text-primary-400 group-hover:text-primary-300 group-hover:bg-primary-900/20 transition-colors">
+                        <i data-lucide="${p.icon}"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-100 mb-3">${p.title}</h3>
+                    <p class="text-slate-400 text-sm mb-6 leading-relaxed">${p.desc}</p>
+                    <div class="border-t border-slate-800 pt-4">
+                        <span class="text-xs font-bold text-gold-400 uppercase tracking-wide flex items-center gap-2">
+                            <i data-lucide="check-circle-2" width="14"></i> ${p.hl}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('personas-grid').innerHTML = personaHTML;
+
+            // Render Assets
+            const assetHTML = ASSETS.map(a => `
+                <div class="bg-slate-800/50 border border-slate-700/50 p-6 rounded-xl hover:bg-slate-800 transition-all">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-lg font-bold text-slate-100">${a.title}</h3>
+                        <i data-lucide="lock" width="16" class="text-gold-500/70"></i>
+                    </div>
+                    <p class="text-slate-400 text-sm mb-6 h-10">${a.desc}</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${a.partners.map(p => `<span class="text-xs bg-slate-950 text-slate-300 px-2 py-1 rounded border border-slate-700">${p}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('assets-grid').innerHTML = assetHTML;
+            
+            // Re-run Lucide to render icons in new HTML
+            lucide.createIcons();
+        }
+
+        // --- Logic: Tabs ---
+        window.switchTab = (tab) => {
+            // Reset styles
+            ['hunter', 'guardian', 'expert'].forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                const iconDiv = el.querySelector('.tab-icon');
+                
+                el.classList.remove('bg-slate-800', 'border-primary-500/50', 'shadow-lg');
+                el.classList.add('bg-transparent', 'border-slate-800');
+                
+                iconDiv.classList.remove('bg-primary-500', 'text-white');
+                iconDiv.classList.add('bg-slate-800', 'text-slate-400');
+            });
+
+            // Set Active Style
+            const activeEl = document.getElementById(`tab-${tab}`);
+            const activeIcon = activeEl.querySelector('.tab-icon');
+            
+            activeEl.classList.add('bg-slate-800', 'border-primary-500/50', 'shadow-lg');
+            activeEl.classList.remove('bg-transparent', 'border-slate-800');
+            
+            activeIcon.classList.add('bg-primary-500', 'text-white');
+            activeIcon.classList.remove('bg-slate-800', 'text-slate-400');
+
+            // View Switching
+            const dashboard = document.getElementById('view-dashboard');
+            const chat = document.getElementById('view-chat');
+            const dashTitle = document.getElementById('dashboard-title');
+
+            if (tab === 'expert') {
+                dashboard.classList.add('hidden');
+                chat.classList.remove('hidden');
+                chat.classList.add('flex');
+            } else {
+                chat.classList.add('hidden');
+                chat.classList.remove('flex');
+                dashboard.classList.remove('hidden');
+                dashTitle.innerText = tab === 'hunter' ? "Hunter Mode Dashboard" : "Guardian Mode Alert System";
+            }
+        };
+
+        // --- Logic: Chat ---
+        const chatInput = document.getElementById('chat-input');
+        const chatSend = document.getElementById('chat-send');
+        const messagesContainer = document.getElementById('chat-messages');
+
+        function appendMessage(role, text) {
+            const isModel = role === 'model';
+            const html = `
+                <div class="flex gap-3 ${!isModel ? 'flex-row-reverse' : ''} animate-fade-in">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isModel ? 'bg-primary-600' : 'bg-slate-600'}">
+                        <i data-lucide="${isModel ? 'bot' : 'user'}" width="16" class="text-white"></i>
+                    </div>
+                    <div class="max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed ${isModel ? 'bg-slate-800 text-slate-200 rounded-tl-none' : 'bg-primary-600 text-white rounded-tr-none'}">
+                        ${text}
+                    </div>
+                </div>
+            `;
+            messagesContainer.insertAdjacentHTML('beforeend', html);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            lucide.createIcons();
+        }
+
+        async function handleSend() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+            
+            appendMessage('user', text);
+            chatInput.value = '';
+
+            // Loading State
+            const loadingId = 'loading-' + Date.now();
+            const loadingHTML = `
+                <div id="${loadingId}" class="flex gap-3 animate-fade-in">
+                    <div class="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center flex-shrink-0"><i data-lucide="bot" width="16" class="text-white"></i></div>
+                    <div class="bg-slate-800 p-3 rounded-2xl rounded-tl-none flex items-center gap-2">
+                         <div class="w-2 h-2 bg-primary-400 rounded-full animate-bounce"></div>
+                         <div class="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                         <div class="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                    </div>
+                </div>`;
+            messagesContainer.insertAdjacentHTML('beforeend', loadingHTML);
+            lucide.createIcons();
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            try {
+                if (!API_KEY) throw new Error("API Key Missing");
+
+                const response = await ai.models.generateContent({
+                    model: 'gemini-2.5-flash',
+                    contents: text,
+                    config: {
+                        systemInstruction: "You are the Nexus AI Expert. Professional tone, concise, financial context (EAM/Family Office/Private Equity).",
+                    }
+                });
+                
+                document.getElementById(loadingId).remove();
+                appendMessage('model', response.text || "Thinking complete.");
+
+            } catch (e) {
+                document.getElementById(loadingId).remove();
+                console.error(e);
+                let errorMsg = "Nexus System Busy.";
+                if (e.message.includes("API Key")) errorMsg = "Demo Mode: API Key missing in index.html code.";
+                appendMessage('model', errorMsg);
+            }
+        }
+
+        chatSend.addEventListener('click', handleSend);
+        chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') handleSend(); });
+
+        // --- Init ---
+        // Render initial content
+        renderContent();
+        // Set initial tab
+        switchTab('hunter');
+        // Mobile Menu Logic
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+    </script>
+</body>
 </html>
