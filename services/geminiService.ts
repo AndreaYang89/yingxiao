@@ -1,11 +1,26 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize the client. 
-// Note: In a real production app, ensure API_KEY is restricted or proxied.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Helper to safely access environment variables without crashing in browser
+const getApiKey = (): string => {
+  try {
+    // Check if process is defined (Node/Bundler)
+    // @ts-ignore
+    if (typeof process !== 'undefined' && process.env) {
+      // @ts-ignore
+      return process.env.API_KEY || '';
+    }
+  } catch (e) {
+    console.warn("Could not access process.env");
+  }
+  return '';
+};
+
+// Initialize the client with the safe key getter
+const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
 export const generateExpertResponse = async (userPrompt: string): Promise<string> => {
-  if (!process.env.API_KEY) {
+  const apiKey = getApiKey();
+  if (!apiKey) {
     return "Demo Mode: API Key missing. Please configure your environment to use the live AI Expert.";
   }
 
